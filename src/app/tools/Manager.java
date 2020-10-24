@@ -1,10 +1,12 @@
 package app.tools;
 
 import app.Handler;
+import app.tools.canvas.Canvas;
 import app.tools.tools.CursorAttributes;
 import app.tools.tools.Tool;
 import app.tools.ui.UIManager;
 
+import java.awt.*;
 import java.util.ArrayList;
 
 public class Manager {
@@ -19,11 +21,13 @@ public class Manager {
     //tools
     ArrayList<Tool> tools;
 
+
     public Manager(Handler handler)
     {
         this.handler = handler;
         cursor = new CursorAttributes(handler);
         uiManager = new UIManager(handler);
+
 
         handler.getMouseManager().setUiManager(uiManager);
     }

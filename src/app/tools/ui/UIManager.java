@@ -2,6 +2,7 @@ package app.tools.ui;
 
 import app.Handler;
 
+import app.tools.canvas.Canvas;
 import app.tools.tools.Brush;
 import app.tools.tools.Ellipse;
 import app.tools.tools.Line;
@@ -15,10 +16,12 @@ import java.util.ArrayList;
 public class UIManager {
 
     private Handler handler;
+    private Canvas canvas;
 
     private ArrayList<Button> buttonList;
     private TransparencySlider tSlider;
 
+    private
     Box box;
     JPanel buttonPanel;
 
@@ -35,6 +38,8 @@ public class UIManager {
         setupTransparencySlider();
 
         buttonPanel.add(box);
+
+        canvas = new Canvas(handler, 400, 500);
     }
 
     public void setupToolMenu()
@@ -44,9 +49,9 @@ public class UIManager {
         buttonList.add(new Button(handler, "./res/icons/Ellipse.png", new Ellipse(handler)));
         buttonList.add(new Button(handler, "./res/icons/Rectangle.png", new Rectangle(handler)));
 
-        buttonList.add(new ColorPicker(handler, "./src/Fill.png"));
+        buttonList.add(new ColorPicker(handler, "./res/icons/Fill.png"));
 
-        createButtons();
+        //createButtons();
     }
 
     public void setupTransparencySlider()
@@ -64,6 +69,10 @@ public class UIManager {
             tool.createButton();
             box.add(tool.getButton());
         }
+    }
+
+    public Canvas getCanvas() {
+        return canvas;
     }
 
     public JPanel getButtonPanel() {

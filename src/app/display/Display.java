@@ -26,7 +26,7 @@ public class Display {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setResizable(false);
         frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
+
     }
 
     public JFrame getFrame()

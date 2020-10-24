@@ -5,7 +5,7 @@ import app.input.KeyManager;
 import app.input.MouseManager;
 import app.tools.canvas.Canvas;
 
-import java.awt.BorderLayout;
+import java.awt.*;
 import java.awt.event.KeyListener;
 
 public class PaintApp {
@@ -13,8 +13,8 @@ public class PaintApp {
         Handler handler;
 
         Display display;
-
-        private int width = 600, height = 500;
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        private int width = 1200, height = 500;
         public String title = "PaintApp";
 
         KeyManager keyManager;
@@ -29,7 +29,7 @@ public class PaintApp {
 
         public void init()
         {
-                display = new Display(title, width, height);
+                display = new Display(title, screenSize.width, screenSize.height);
 
                 display.getFrame().addKeyListener(keyManager);
                 display.getFrame().addMouseListener(mouseManager);
@@ -41,7 +41,9 @@ public class PaintApp {
                 display.getFrame().add(handler.getManager().getUiManager().getButtonPanel(), BorderLayout.SOUTH);
 
                 // Make the drawing area take up the rest of the frame
-                //display.getFrame().add(new Canvas(), BorderLayout.CENTER);
+
+                display.getFrame().add(handler.getManager().getUiManager().getCanvas(), BorderLayout.CENTER);
+                display.getFrame().setVisible(true);
         }
 
         public KeyManager getKeyManager() {
