@@ -1,15 +1,23 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import java.awt.event.*;
 import java.awt.*;
 import java.awt.geom.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.*;
 
 @SuppressWarnings("serial")
 public class SimplePaint_V2 extends JFrame {
+    JMenuBar menubar;
+    JMenu File, Exit;
+    JMenuItem New, Open;
+    JComponent DrawingBoard;
 
     JButton brushBut, lineBut, ellipseBut, rectBut, strokeBut, fillBut, eraserBut;
 
@@ -44,9 +52,36 @@ public class SimplePaint_V2 extends JFrame {
     public SimplePaint_V2() {
 
         // Define the defaults for the JFrame
-        this.setSize(800, 800);
+        this.setSize(800, 600);
         this.setTitle("Java Paint");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setJMenuBar(menubar);
+
+        JMenuBar menuBar = new JMenuBar();
+
+        // Add the menubar to the frame
+        setJMenuBar(menuBar);
+
+        // Define and add two drop down menu to the menubar
+        JMenu fileMenu = new JMenu("File");
+        menuBar.add(fileMenu);
+
+        // Create and add simple menu item to one of the drop down menu
+        JMenuItem newAction = new JMenuItem("New Project");
+        //JMenuItem openAction = new JMenuItem("Open File");
+        JMenuItem exportAction = new JMenuItem("Export");
+
+        fileMenu.add(newAction);
+        //fileMenu.add(openAction);
+        fileMenu.add(exportAction);
+
+        // Creating New Project
+        newAction.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent arg0) {
+
+                new SimplePaint_V2().setVisible(true);
+            }
+        });
 
         JPanel buttonPanel = new JPanel();
 
@@ -99,7 +134,44 @@ public class SimplePaint_V2 extends JFrame {
         this.add(buttonPanel, BorderLayout.SOUTH);
 
         // Make the drawing area take up the rest of the frame
-        this.add(new DrawingBoard(), BorderLayout.CENTER);
+        //this.add(new DrawingBoard(), BorderLayout.CENTER);
+        final DrawingBoard drawPanel = new DrawingBoard();
+        this.add(drawPanel, BorderLayout.CENTER);
+        this.getContentPane().setBackground(Color.WHITE);
+
+        // exporting image
+        exportAction.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent arg0) {
+                BufferedImage image = new BufferedImage(drawPanel.getWidth(),
+                        drawPanel.getHeight(), BufferedImage.TYPE_INT_ARGB);
+                Graphics2D g = image.createGraphics();
+                drawPanel.paint(g);
+                g.dispose();
+
+                JFileChooser fileChooser = new JFileChooser();
+                java.io.File theDirectory = new File("C:/Users/Wenda/Desktop");
+                fileChooser.setCurrentDirectory(theDirectory);
+                FileNameExtensionFilter pngFilter = new FileNameExtensionFilter(
+                        "PNG file (*.png)", "png");
+                fileChooser.addChoosableFileFilter(pngFilter);
+                fileChooser.setFileFilter(pngFilter);
+
+                int status = fileChooser.showSaveDialog(SimplePaint_V2.this);
+
+                if (status == JFileChooser.APPROVE_OPTION) {
+                    try {
+                        ImageIO.write(image, "png",
+                                fileChooser.getSelectedFile());
+                        JOptionPane.showMessageDialog(null, "Image saved to "
+                                + fileChooser.getSelectedFile().getName());
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+
+            }
+        });
 
         // Show the frame
         this.setVisible(true);
@@ -242,25 +314,6 @@ public class SimplePaint_V2 extends JFrame {
                         transPercent.add(transparentVal);
                     }
 
-                    /*
-                    // eraser button
-                    if (currentAction == 7) {
-
-                        Shape aShape = null;
-
-                        // setting eraser as background color
-                        strokeColor = Color.WHITE;
-                        fillColor = Color.WHITE;
-                        strokeColor = fillColor;
-
-                        aShape = drawBrush(x,y,5,5);
-
-                        shapes.add(aShape);
-                        shapeFill.add(fillColor);
-                        shapeStroke.add(strokeColor);
-                        //transPercent.add(transparentVal);
-                    }
-                    */
 
                     // Get the final x & y position after the mouse is dragged
                     drawEnd = new Point(e.getX(), e.getY());
