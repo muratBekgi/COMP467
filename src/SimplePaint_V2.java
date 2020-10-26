@@ -15,7 +15,7 @@ import java.util.*;
 @SuppressWarnings("serial")
 public class SimplePaint_V2 extends JFrame {
     JMenuBar menubar;
-    JMenu File, Exit;
+    JMenu File;
     JMenuItem New, Open;
     JComponent DrawingBoard;
 
@@ -69,11 +69,11 @@ public class SimplePaint_V2 extends JFrame {
         // Create and add simple menu item to one of the drop down menu
         JMenuItem newAction = new JMenuItem("New Project");
         //JMenuItem openAction = new JMenuItem("Open File");
-        JMenuItem exportAction = new JMenuItem("Export");
+        JMenuItem saveAction = new JMenuItem("Save");
 
         fileMenu.add(newAction);
         //fileMenu.add(openAction);
-        fileMenu.add(exportAction);
+        fileMenu.add(saveAction);
 
         // Creating New Project
         newAction.addActionListener(new ActionListener() {
@@ -90,11 +90,11 @@ public class SimplePaint_V2 extends JFrame {
 
         // Make all the buttons in makeMeButtons by passing the
         // button icon.
-        brushBut = makeMeButtons("/brush.png", 1);
+        brushBut = makeMeButtons("./src/brush.png", 1);
         lineBut = makeMeButtons("./src/Line.png", 2);
         ellipseBut = makeMeButtons("./src/Ellipse.png", 3);
         rectBut = makeMeButtons("./src/Rectangle.png", 4);
-        //eraserBut = makeMeButtons("./src/Rectangle.png", 7);
+        //eraserBut = makeMeButtons("./src/eraser.png", 7);
 
         // Make all the buttons in makeMeColorButton by passing the
         // button icon and true for stroke color or false for fill
@@ -139,8 +139,8 @@ public class SimplePaint_V2 extends JFrame {
         this.add(drawPanel, BorderLayout.CENTER);
         this.getContentPane().setBackground(Color.WHITE);
 
-        // exporting image
-        exportAction.addActionListener(new ActionListener() {
+        // saving image
+        saveAction.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent arg0) {
                 BufferedImage image = new BufferedImage(drawPanel.getWidth(),
