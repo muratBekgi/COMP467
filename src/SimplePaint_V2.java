@@ -349,8 +349,10 @@ public class SimplePaint_V2 extends JFrame {
                     }
 
                     // Get the final x & y position after the mouse is dragged
-                    drawStart = new Point(e.getX(), e.getY());
-                    drawEnd = new Point(e.getX(), e.getY());
+                    if (currentAction == 1 || currentAction == 8) {
+                        drawStart = new Point(e.getX(), e.getY());
+                        drawEnd = new Point(e.getX(), e.getY());
+                    }
 
                     repaint();
                 }
