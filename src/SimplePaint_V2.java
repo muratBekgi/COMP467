@@ -19,7 +19,7 @@ public class SimplePaint_V2 extends JFrame {
     JMenuItem New, Open;
     JComponent DrawingBoard;
 
-    JButton brushBut, lineBut, ellipseBut, rectBut, strokeBut, fillBut, eraserBut;
+    JButton brushBut, lineBut, ellipseBut, rectBut, strokeBut, fillBut, eraserBut, pencilBut;
 
     // Slider used to change the transparency
     JSlider transSlider;
@@ -33,19 +33,22 @@ public class SimplePaint_V2 extends JFrame {
     Graphics2D graphSettings;
 
     // Change the stroke dynamically with a component
-    //graphSettings.setStroke(new BasicStroke(5F));
+    // graphSettings.setStroke(new BasicStroke(5F));
 
     // used to monitor what shape to draw next
     int currentAction = 1;
 
     // Transparency of the shape
-    //1.0f transparency off
+    // 1.0f transparency off
     float transparentVal = 1.0f;
 
     // Default stroke and fill colors
     Color strokeColor = Color.BLACK, fillColor = Color.BLACK;
+    private boolean dragging;
+    private Graphics graphicsForDrawing;
+    private int strokeSize;
 
-    public static void main(String [] args) {
+    public static void main(String[] args) {
         new SimplePaint_V2();
     }
 
@@ -68,11 +71,11 @@ public class SimplePaint_V2 extends JFrame {
 
         // Create and add simple menu item to one of the drop down menu
         JMenuItem newAction = new JMenuItem("New Project");
-        //JMenuItem openAction = new JMenuItem("Open File");
+        // JMenuItem openAction = new JMenuItem("Open File");
         JMenuItem saveAction = new JMenuItem("Save");
 
         fileMenu.add(newAction);
-        //fileMenu.add(openAction);
+        // fileMenu.add(openAction);
         fileMenu.add(saveAction);
 
         // Creating New Project
@@ -94,7 +97,8 @@ public class SimplePaint_V2 extends JFrame {
         lineBut = makeMeButtons("./src/Line.png", 2);
         ellipseBut = makeMeButtons("./src/Ellipse.png", 3);
         rectBut = makeMeButtons("./src/Rectangle.png", 4);
-        //eraserBut = makeMeButtons("./src/eraser.png", 7);
+        pencilBut = makeMeButtons("./src/pencil.png", 8);
+        // eraserBut = makeMeButtons("./src/eraser.png", 7);
 
         // Make all the buttons in makeMeColorButton by passing the
         // button icon and true for stroke color or false for fill
@@ -109,7 +113,8 @@ public class SimplePaint_V2 extends JFrame {
         theBox.add(rectBut);
         theBox.add(strokeBut);
         theBox.add(fillBut);
-        //theBox.add(eraserBut);
+        theBox.add(pencilBut);
+        // theBox.add(eraserBut);
 
         // Add the transparent label and slider
         transLabel = new JLabel("Transparent: 1");
@@ -134,7 +139,7 @@ public class SimplePaint_V2 extends JFrame {
         this.add(buttonPanel, BorderLayout.SOUTH);
 
         // Make the drawing area take up the rest of the frame
-        //this.add(new DrawingBoard(), BorderLayout.CENTER);
+        // this.add(new DrawingBoard(), BorderLayout.CENTER);
         final DrawingBoard drawPanel = new DrawingBoard();
         this.add(drawPanel, BorderLayout.CENTER);
         this.getContentPane().setBackground(Color.WHITE);
@@ -143,8 +148,8 @@ public class SimplePaint_V2 extends JFrame {
         saveAction.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent arg0) {
-                BufferedImage image = new BufferedImage(drawPanel.getWidth(),
-                        drawPanel.getHeight(), BufferedImage.TYPE_INT_ARGB);
+                BufferedImage image = new BufferedImage(drawPanel.getWidth(), drawPanel.getHeight(),
+                        BufferedImage.TYPE_INT_ARGB);
                 Graphics2D g = image.createGraphics();
                 drawPanel.paint(g);
                 g.dispose();
@@ -152,8 +157,7 @@ public class SimplePaint_V2 extends JFrame {
                 JFileChooser fileChooser = new JFileChooser();
                 java.io.File theDirectory = new File("C:/Users/Wenda/Desktop");
                 fileChooser.setCurrentDirectory(theDirectory);
-                FileNameExtensionFilter pngFilter = new FileNameExtensionFilter(
-                        "PNG file (*.png)", "png");
+                FileNameExtensionFilter pngFilter = new FileNameExtensionFilter("PNG file (*.png)", "png");
                 fileChooser.addChoosableFileFilter(pngFilter);
                 fileChooser.setFileFilter(pngFilter);
 
@@ -161,10 +165,9 @@ public class SimplePaint_V2 extends JFrame {
 
                 if (status == JFileChooser.APPROVE_OPTION) {
                     try {
-                        ImageIO.write(image, "png",
-                                fileChooser.getSelectedFile());
-                        JOptionPane.showMessageDialog(null, "Image saved to "
-                                + fileChooser.getSelectedFile().getName());
+                        ImageIO.write(image, "png", fileChooser.getSelectedFile());
+                        JOptionPane.showMessageDialog(null,
+                                "Image saved to " + fileChooser.getSelectedFile().getName());
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
@@ -192,6 +195,11 @@ public class SimplePaint_V2 extends JFrame {
 
             public void actionPerformed(ActionEvent e) {
                 currentAction = actionNum;
+                if (currentAction != 8) {
+                    strokeSize = 5;
+                } else {
+                    strokeSize = 1;
+                }
             }
         });
 
@@ -213,11 +221,11 @@ public class SimplePaint_V2 extends JFrame {
                 if (stroke) {
 
                     // JColorChooser is a popup that lets you pick a color
-                    strokeColor = JColorChooser.showDialog(null,  "Pick a Stroke", Color.BLACK);
+                    strokeColor = JColorChooser.showDialog(null, "Pick a Stroke", Color.BLACK);
 
                 } else {
 
-                    fillColor = JColorChooser.showDialog(null,  "Pick a Fill", Color.BLACK);
+                    fillColor = JColorChooser.showDialog(null, "Pick a Fill", Color.BLACK);
                 }
             }
         });
@@ -233,6 +241,7 @@ public class SimplePaint_V2 extends JFrame {
         ArrayList<Color> shapeFill = new ArrayList<Color>();
         ArrayList<Color> shapeStroke = new ArrayList<Color>();
         ArrayList<Float> transPercent = new ArrayList<Float>();
+        ArrayList<Integer> strokeSizes = new ArrayList<Integer>();
 
         Point drawStart, drawEnd;
 
@@ -242,19 +251,25 @@ public class SimplePaint_V2 extends JFrame {
             this.addMouseListener(new MouseAdapter() {
 
                 public void mousePressed(MouseEvent e) {
+                    drawStart = new Point(e.getX(), e.getY());
 
-                    if (currentAction != 1) {
+                    if (currentAction != 1 && currentAction != 8) {
                         // When the mouse is pressed get x & y position
-                        drawStart = new Point(e.getX(), e.getY());
+
                         drawEnd = drawStart;
                         repaint();
+                    }
+                    if (currentAction == 8) {
+                        graphicsForDrawing = getGraphics();
+                        graphicsForDrawing.setColor(Color.BLACK);
+                        dragging = true;
                     }
 
                 }
 
                 public void mouseReleased(MouseEvent e) {
 
-                    if (currentAction != 1) {
+                    if (currentAction != 1 && currentAction != 8) {
                         // Create a shape using the starting x & y
                         // and finishing x & y positions
                         Shape aShape = null;
@@ -278,6 +293,7 @@ public class SimplePaint_V2 extends JFrame {
                         shapeFill.add(fillColor);
                         shapeStroke.add(strokeColor);
                         transPercent.add(transparentVal);
+                        strokeSizes.add(strokeSize);
 
                         drawStart = null;
                         drawEnd = null;
@@ -286,8 +302,16 @@ public class SimplePaint_V2 extends JFrame {
                         repaint();
 
                     }
+                    if (currentAction == 8) {
+                        if (dragging == false)
+                            return; // Nothing to do because the user isn't drawing.
+                        dragging = false;
+                        graphicsForDrawing.dispose();
+                        graphicsForDrawing = null;
+
+                    }
                 }
-            } ); // end of addMouseListener
+            }); // end of addMouseListener
 
             this.addMouseMotionListener(new MouseMotionAdapter() {
 
@@ -295,48 +319,58 @@ public class SimplePaint_V2 extends JFrame {
 
                     // If this is a brush have shapes go on the screen quickly
                     // x and y will get the end position of the shape
+                    Shape aShape = null;
+                    int x = e.getX();
+                    int y = e.getY();
+
                     if (currentAction == 1) {
 
-                        int x = e.getX();
-                        int y = e.getY();
-
-                        Shape aShape = null;
+                        strokeSize = 5;
 
                         // Make stroke and fill equal
                         // brush strokes are really ellipses
                         strokeColor = fillColor;
 
-                        aShape = drawBrush(x,y,5,5);
-
+                        aShape = drawLine(drawStart.x, drawStart.y, x, y);
                         shapes.add(aShape);
                         shapeFill.add(fillColor);
                         shapeStroke.add(strokeColor);
                         transPercent.add(transparentVal);
+                        strokeSizes.add(strokeSize);
+                    } else if (currentAction == 8) {
+                        strokeSize = 1;
+
+                        aShape = drawLine(drawStart.x, drawStart.y, x, y);
+                        shapes.add(aShape);
+                        shapeFill.add(fillColor);
+                        shapeStroke.add(strokeColor);
+                        transPercent.add(transparentVal);
+                        strokeSizes.add(strokeSize);
                     }
 
-
                     // Get the final x & y position after the mouse is dragged
+                    drawStart = new Point(e.getX(), e.getY());
                     drawEnd = new Point(e.getX(), e.getY());
+
                     repaint();
                 }
-            } ); // end of addMouseMotionListener
+            }); // end of addMouseMotionListener
         }
-
 
         public void paint(Graphics g) {
 
             // Class used to define the shapes to be drawn and rendered on screen
-            graphSettings = (Graphics2D)g;
+            graphSettings = (Graphics2D) g;
 
             // Antialiasing cleans up the jagged lines and defines rendering rules
             graphSettings.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
             // Defines the line width of the stroke
-            graphSettings.setStroke(new BasicStroke(5));
 
             // Iterators created to cycle through arraylist of strokes and fills
             Iterator<Color> strokeCounter = shapeStroke.iterator();
             Iterator<Color> fillCounter = shapeFill.iterator();
+            Iterator<Integer> sizeSelector = strokeSizes.iterator();
 
             // Iterator for transparency
             Iterator<Float> transCounter = transPercent.iterator();
@@ -349,6 +383,8 @@ public class SimplePaint_V2 extends JFrame {
 
                 // Grabs the next stroke from the color arraylist
                 graphSettings.setPaint(strokeCounter.next());
+
+                graphSettings.setStroke(new BasicStroke(sizeSelector.next()));
                 // draws shape on the screen
                 graphSettings.draw(s);
 
@@ -361,7 +397,7 @@ public class SimplePaint_V2 extends JFrame {
             if (drawStart != null && drawEnd != null) {
 
                 // Makes the guide shape transparent
-                //1.0f means transparency off
+                // 1.0f means transparency off
                 graphSettings.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.40f));
 
                 // Make guide shape gray for professional look
@@ -369,7 +405,7 @@ public class SimplePaint_V2 extends JFrame {
 
                 Shape aShape = null;
 
-                if (currentAction == 2) {
+                if (currentAction == 2 || currentAction == 8 || currentAction == 1) {
 
                     aShape = drawLine(drawStart.x, drawStart.y, drawEnd.x, drawEnd.y);
 
@@ -380,8 +416,7 @@ public class SimplePaint_V2 extends JFrame {
                 } else if (currentAction == 4) {
 
                     // Create a new rectangle using x & y coordinates
-                    aShape = drawRectangle(drawStart.x, drawStart.y,
-                            drawEnd.x, drawEnd.y);
+                    aShape = drawRectangle(drawStart.x, drawStart.y, drawEnd.x, drawEnd.y);
                 }
 
                 graphSettings.draw(aShape);
@@ -435,7 +470,7 @@ public class SimplePaint_V2 extends JFrame {
 
                 // Change the value for the label next to the slider
                 // Use decimal format to make sure only 2 decimals are displayed
-                transLabel.setText("Transparent: " + dec.format(transSlider.getValue() * .01) );
+                transLabel.setText("Transparent: " + dec.format(transSlider.getValue() * .01));
 
                 // Set the value for transparency for every shape drawn after
                 transparentVal = (float) (transSlider.getValue() * .01);
