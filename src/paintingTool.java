@@ -13,11 +13,8 @@ import java.text.DecimalFormat;
 import java.util.*;
 
 @SuppressWarnings("serial")
-public class SimplePaint_V2 extends JFrame {
+public class paintingTool extends JFrame {
     JMenuBar menubar;
-    JMenu File;
-    JMenuItem New, Open;
-    JComponent DrawingBoard;
 
     JButton brushBut,
             lineBut,
@@ -56,10 +53,10 @@ public class SimplePaint_V2 extends JFrame {
     private int strokeSize;
 
     public static void main(String[] args) {
-        new SimplePaint_V2();
+        new paintingTool();
     }
 
-    public SimplePaint_V2() {
+    public paintingTool() {
 
         // Define the defaults for the JFrame
         this.setSize(800, 600);
@@ -89,39 +86,39 @@ public class SimplePaint_V2 extends JFrame {
         newAction.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
 
-                new SimplePaint_V2().setVisible(true);
+                new paintingTool().setVisible(true);
             }
         });
 
         JPanel buttonPanel = new JPanel();
 
         // Swing box that will hold all the buttons horizontally
-        Box theBox = Box.createHorizontalBox();
+        Box boxPanel = Box.createHorizontalBox();
 
-        // Make all the buttons in makeMeButtons by passing the
+        // Make all the buttons in toolButton by passing the
         // button icon.
-        brushBut = makeMeButtons("./src/brush.png", 1);
-        lineBut = makeMeButtons("./src/Line.png", 2);
-        ellipseBut = makeMeButtons("./src/Ellipse.png", 3);
-        rectBut = makeMeButtons("./src/Rectangle.png", 4);
-        //eraserBut = makeMeButtons("./src/eraser.png", 7);
-        pencilBut = makeMeButtons("./src/pencil.png", 8);
+        brushBut = toolButton("./src/brush.png", 1);
+        lineBut = toolButton("./src/Line.png", 2);
+        ellipseBut = toolButton("./src/Ellipse.png", 3);
+        rectBut = toolButton("./src/Rectangle.png", 4);
+        //eraserBut = toolButton("./src/eraser.png", 7);
+        pencilBut = toolButton("./src/pencil.png", 8);
 
-        // Make all the buttons in makeMeColorButton by passing the
+        // Make all the buttons in colorEditButton by passing the
         // button icon and true for stroke color or false for fill
 
-        strokeBut = makeMeColorButton("./src/Stroke.png", 5, true);
-        fillBut = makeMeColorButton("./src/Fill.png", 6, false);
+        strokeBut = colorEditButton("./src/Stroke.png", 5, true);
+        fillBut = colorEditButton("./src/Fill.png", 6, false);
 
-        // Add the buttons to the box
-        theBox.add(brushBut);
-        theBox.add(lineBut);
-        theBox.add(ellipseBut);
-        theBox.add(rectBut);
-        theBox.add(strokeBut);
-        theBox.add(fillBut);
-        //theBox.add(eraserBut);
-        theBox.add(pencilBut);
+        // Add the buttons to the box panel
+        boxPanel.add(brushBut);
+        boxPanel.add(lineBut);
+        boxPanel.add(ellipseBut);
+        boxPanel.add(rectBut);
+        boxPanel.add(strokeBut);
+        boxPanel.add(fillBut);
+        //boxPanel.add(eraserBut);
+        boxPanel.add(pencilBut);
 
         // Add the transparent label and slider
         transLabel = new JLabel("Transparent: 1");
@@ -130,20 +127,20 @@ public class SimplePaint_V2 extends JFrame {
         transSlider = new JSlider(1, 99, 99);
 
         // Create an instance of ListenForEvents to handle events
-        ListenForSlider lForSlider = new ListenForSlider();
+        ListenForSlider sliderHandler = new ListenForSlider();
 
         // creating class listenForSlider that will make an alert when an event
         // occurs on the slider
-        transSlider.addChangeListener(lForSlider);
+        transSlider.addChangeListener(sliderHandler);
 
-        theBox.add(transLabel);
-        theBox.add(transSlider);
+        boxPanel.add(transLabel);
+        boxPanel.add(transSlider);
 
         // Add the box of buttons to the panel
-        buttonPanel.add(theBox);
+        buttonPanel.add(boxPanel);
 
         // Position the buttons in the bottom of the frame
-        this.add(buttonPanel, BorderLayout.WEST);
+        this.add(buttonPanel, BorderLayout.NORTH);
 
         // Make the drawing area take up the rest of the frame
         //this.add(new DrawingBoard(), BorderLayout.CENTER);
@@ -155,21 +152,20 @@ public class SimplePaint_V2 extends JFrame {
         saveAction.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent arg0) {
-                BufferedImage image = new BufferedImage(drawPanel.getWidth(),
-                        drawPanel.getHeight(), BufferedImage.TYPE_INT_ARGB);
+                BufferedImage image = new BufferedImage(drawPanel.getWidth(), drawPanel.getHeight(), BufferedImage.TYPE_INT_ARGB);
                 Graphics2D g = image.createGraphics();
                 drawPanel.paint(g);
                 g.dispose();
 
                 JFileChooser fileChooser = new JFileChooser();
-                java.io.File theDirectory = new File("C:/Users/Wenda/Desktop");
-                fileChooser.setCurrentDirectory(theDirectory);
+                java.io.File directory = new File("C:/Users/Mimi/Desktop");
+                fileChooser.setCurrentDirectory(directory);
                 FileNameExtensionFilter pngFilter = new FileNameExtensionFilter(
                         "PNG file (*.png)", "png");
                 fileChooser.addChoosableFileFilter(pngFilter);
                 fileChooser.setFileFilter(pngFilter);
 
-                int status = fileChooser.showSaveDialog(SimplePaint_V2.this);
+                int status = fileChooser.showSaveDialog(paintingTool.this);
 
                 if (status == JFileChooser.APPROVE_OPTION) {
                     try {
@@ -192,15 +188,15 @@ public class SimplePaint_V2 extends JFrame {
     // Spits out buttons based on the image supplied
     // actionNum represents each shape to be drawn
 
-    public JButton makeMeButtons(String iconFile, final int actionNum) {
+    public JButton toolButton(String iconFile, final int actionNum) {
 
-        JButton theBut = new JButton();
+        JButton button = new JButton();
         Icon butIcon = new ImageIcon(iconFile);
-        theBut.setIcon(butIcon);
+        button.setIcon(butIcon);
 
         // Make the proper actionPerformed method execute when the
         // specific button is pressed
-        theBut.addActionListener(new ActionListener() {
+        button.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
                 currentAction = actionNum;
@@ -213,18 +209,18 @@ public class SimplePaint_V2 extends JFrame {
             }
         });
 
-        return theBut;
+        return button;
     }
 
     // Spits out buttons based on the image supplied and
     // whether a stroke or fill is to be defined
-    public JButton makeMeColorButton(String iconFile, final int actionNum, final boolean stroke) {
+    public JButton colorEditButton(String iconFile, final int actionNum, final boolean stroke) {
 
-        JButton theBut = new JButton();
+        JButton button = new JButton();
         Icon butIcon = new ImageIcon(iconFile);
-        theBut.setIcon(butIcon);
+        button.setIcon(butIcon);
 
-        theBut.addActionListener(new ActionListener() {
+        button.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
 
@@ -240,7 +236,7 @@ public class SimplePaint_V2 extends JFrame {
             }
         });
 
-        return theBut;
+        return button;
     }
 
     private class DrawingBoard extends JComponent {
