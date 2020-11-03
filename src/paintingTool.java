@@ -27,8 +27,10 @@ public class paintingTool extends JFrame {
 
     // Slider used to change the transparency
     JSlider transSlider;
+    JSlider brushSlider;
 
     JLabel transLabel;
+    JLabel brushLabel;
 
     // Makes sure the float for transparency only shows 2 digits
     DecimalFormat dec = new DecimalFormat("#.##");
@@ -45,6 +47,7 @@ public class paintingTool extends JFrame {
     // Transparency of the shape
     //1.0f transparency off
     float transparentVal = 1.0f;
+    int brushVal = 10;
 
     // Default stroke and fill colors
     Color strokeColor = Color.BLACK, fillColor = Color.BLACK;
@@ -123,8 +126,13 @@ public class paintingTool extends JFrame {
         // Add the transparent label and slider
         transLabel = new JLabel("Transparent: 1");
 
+        // Add the brush label and slider
+        brushLabel = new JLabel("Brush Size: 10");
+
         // Min value, Max value and starting value for slider
         transSlider = new JSlider(1, 99, 99);
+        brushSlider = new JSlider(1, 10, 10);
+
 
         // Create an instance of ListenForEvents to handle events
         ListenForSlider sliderHandler = new ListenForSlider();
@@ -132,10 +140,13 @@ public class paintingTool extends JFrame {
         // creating class listenForSlider that will make an alert when an event
         // occurs on the slider
         transSlider.addChangeListener(sliderHandler);
+        brushSlider.addChangeListener(sliderHandler);
 
         boxPanel.add(transLabel);
         boxPanel.add(transSlider);
 
+        boxPanel.add(brushLabel);
+        boxPanel.add(brushSlider);
         // Add the box of buttons to the panel
         buttonPanel.add(boxPanel);
 
@@ -148,7 +159,7 @@ public class paintingTool extends JFrame {
         this.add(drawPanel, BorderLayout.CENTER);
         this.getContentPane().setBackground(Color.WHITE);
 
-        // saving image
+        // saving image as png
         saveAction.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent arg0) {
@@ -248,6 +259,7 @@ public class paintingTool extends JFrame {
         ArrayList<Color> shapeStroke = new ArrayList<Color>();
         ArrayList<Float> transPercent = new ArrayList<Float>();
         ArrayList<Integer> strokeSizes = new ArrayList<Integer>();
+        ArrayList<Float> brushPercent =  new ArrayList<Float>();
 
         Point drawStart, drawEnd;
 
@@ -299,6 +311,7 @@ public class paintingTool extends JFrame {
                         shapeStroke.add(strokeColor);
                         transPercent.add(transparentVal);
                         strokeSizes.add(strokeSize);
+                        brushPercent.add((float)brushVal);
 
                         drawStart = null;
                         drawEnd = null;
@@ -330,8 +343,7 @@ public class paintingTool extends JFrame {
                         int y = e.getY();
 
                         if (currentAction == 1) {
-                            strokeSize = 5;
-
+                            strokeSize = brushVal;
 
                         // Make stroke and fill equal
                         // brush strokes are really ellipses
@@ -383,6 +395,7 @@ public class paintingTool extends JFrame {
 
             // Iterator for transparency
             Iterator<Float> transCounter = transPercent.iterator();
+
 
             // cycling through shapes that were created
             for (Shape s : shapes) {
@@ -483,6 +496,16 @@ public class paintingTool extends JFrame {
 
                 // Set the value for transparency for every shape drawn after
                 transparentVal = (float) (transSlider.getValue() * .01);
+
+            }
+
+            // Check if the source of the event was the slider
+            if (e.getSource() == brushSlider) {
+                // Change the value for the label next to the slider
+                brushLabel.setText("Brush Size: " + brushSlider.getValue());
+
+                // Set the value for brush size for every shape drawn after
+                brushVal = (brushSlider.getValue());
 
             }
 
