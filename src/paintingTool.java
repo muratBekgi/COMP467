@@ -146,7 +146,7 @@ public class paintingTool extends JFrame {
 
         // Min value, Max value and starting value for slider
         transSlider = new JSlider(1, 99, 99);
-        brushSlider = new JSlider(1, 100, 100);
+        brushSlider = new JSlider(1, 10, 10);
 
 
         // Create an instance of ListenForEvents to handle events
