@@ -1,5 +1,6 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.Timer;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -9,6 +10,7 @@ import java.awt.*;
 import java.awt.geom.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -43,17 +45,29 @@ public class paintingTool extends JFrame {
 
     // used to monitor what shape to draw next
     int currentAction = 1;
-
+    boolean imgLoaded = false;
     // Transparency of the shape
     //1.0f transparency off
     float transparentVal = 1.0f;
     int brushVal = 10;
-
     // Default stroke and fill colors
     Color strokeColor = Color.BLACK, fillColor = Color.BLACK;
+    Color bgColor = Color.white;
     private boolean dragging;
     private Graphics graphicsForDrawing;
+    BufferedImage srcImg;
     private int strokeSize;
+
+    private ArrayList<drawPath> brushPaths = new ArrayList<>();
+    // ArrayLists that contain each shape drawn along with
+    // that shapes stroke and fill
+    ArrayList<Shape> shapes = new ArrayList<Shape>();
+    ArrayList<Color> shapeFill = new ArrayList<Color>();
+    ArrayList<Color> shapeStroke = new ArrayList<Color>();
+    ArrayList<Float> transPercent = new ArrayList<Float>();
+    ArrayList<Integer> strokeSizes = new ArrayList<Integer>();
+    ArrayList<Float> brushPercent =  new ArrayList<Float>();
+
 
     public static void main(String[] args) {
         new paintingTool();
@@ -78,11 +92,11 @@ public class paintingTool extends JFrame {
 
         // Create and add simple menu item to one of the drop down menu
         JMenuItem newAction = new JMenuItem("New Project");
-        //JMenuItem openAction = new JMenuItem("Open File");
+        JMenuItem openAction = new JMenuItem("Open File");
         JMenuItem saveAction = new JMenuItem("Save");
 
         fileMenu.add(newAction);
-        //fileMenu.add(openAction);
+        fileMenu.add(openAction);
         fileMenu.add(saveAction);
 
         // Creating New Project
@@ -90,6 +104,7 @@ public class paintingTool extends JFrame {
             public void actionPerformed(ActionEvent arg0) {
 
                 new paintingTool().setVisible(true);
+
             }
         });
 
@@ -104,7 +119,7 @@ public class paintingTool extends JFrame {
         lineBut = toolButton("./src/Line.png", 2);
         ellipseBut = toolButton("./src/Ellipse.png", 3);
         rectBut = toolButton("./src/Rectangle.png", 4);
-        //eraserBut = toolButton("./src/eraser.png", 7);
+        eraserBut = toolButton("./src/eraser.png", 7);
         pencilBut = toolButton("./src/pencil.png", 8);
 
         // Make all the buttons in colorEditButton by passing the
@@ -120,7 +135,7 @@ public class paintingTool extends JFrame {
         boxPanel.add(rectBut);
         boxPanel.add(strokeBut);
         boxPanel.add(fillBut);
-        //boxPanel.add(eraserBut);
+        boxPanel.add(eraserBut);
         boxPanel.add(pencilBut);
 
         // Add the transparent label and slider
@@ -131,7 +146,7 @@ public class paintingTool extends JFrame {
 
         // Min value, Max value and starting value for slider
         transSlider = new JSlider(1, 99, 99);
-        brushSlider = new JSlider(1, 10, 10);
+        brushSlider = new JSlider(1, 100, 100);
 
 
         // Create an instance of ListenForEvents to handle events
@@ -192,8 +207,50 @@ public class paintingTool extends JFrame {
             }
         });
 
+        openAction.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent arg0) {
+
+                JFileChooser fileChooser = new JFileChooser();
+                java.io.File directory = new File("C:/Users/Mimi/Desktop");
+                //java.io.File directory = new File( "." );
+
+                fileChooser.setCurrentDirectory(directory);
+                FileNameExtensionFilter pngFilter = new FileNameExtensionFilter(
+                        "PNG file (*.png)", "png");
+                fileChooser.addChoosableFileFilter(pngFilter);
+                fileChooser.setFileFilter(pngFilter);
+
+                int status = fileChooser.showOpenDialog(paintingTool.this);
+
+                if (status == JFileChooser.APPROVE_OPTION) {
+                    try {
+                        BufferedImage img = ImageIO.read(fileChooser.getSelectedFile());
+
+                        srcImg = img;
+                        imgLoaded = true;
+
+                        // ArrayLists that contain each shape drawn along with
+                        // that shapes stroke and fill
+                        shapes.clear();
+                        shapeFill.clear();
+                        shapeStroke.clear();
+                        transPercent.clear();
+                        strokeSizes.clear();
+                        brushPercent.clear();
+                        brushPaths.clear();
+
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+
+            }
+        });
+
         // Show the frame
         this.setVisible(true);
+
     }
 
     // Spits out buttons based on the image supplied
@@ -252,14 +309,6 @@ public class paintingTool extends JFrame {
 
     private class DrawingBoard extends JComponent {
 
-        // ArrayLists that contain each shape drawn along with
-        // that shapes stroke and fill
-        ArrayList<Shape> shapes = new ArrayList<Shape>();
-        ArrayList<Color> shapeFill = new ArrayList<Color>();
-        ArrayList<Color> shapeStroke = new ArrayList<Color>();
-        ArrayList<Float> transPercent = new ArrayList<Float>();
-        ArrayList<Integer> strokeSizes = new ArrayList<Integer>();
-        ArrayList<Float> brushPercent =  new ArrayList<Float>();
 
         Point drawStart, drawEnd;
 
@@ -271,7 +320,7 @@ public class paintingTool extends JFrame {
                 public void mousePressed(MouseEvent e) {
                     drawStart = new Point(e.getX(), e.getY());
 
-                    if (currentAction != 1 && currentAction != 8) {
+                    if (currentAction != 1 && currentAction != 8 && currentAction != 7) {
                         // When the mouse is pressed get x & y position
                         drawEnd = drawStart;
                         repaint();
@@ -281,12 +330,19 @@ public class paintingTool extends JFrame {
                         graphicsForDrawing.setColor(Color.BLACK);
                         dragging = true;
                     }
-
+                    if(currentAction == 1)
+                    {
+                        brushPaths.add(new drawPath(new Point(e.getPoint()), strokeColor, brushVal, transparentVal));
+                    }
+                    if(currentAction == 7)
+                    {
+                        brushPaths.add(new drawPath(new Point(e.getPoint()), Color.white, brushVal, 1));
+                    }
                 }
 
                 public void mouseReleased(MouseEvent e) {
 
-                    if (currentAction != 1 && currentAction != 8) {
+                    if (currentAction != 1 && currentAction != 8 && currentAction != 7) {
                         // Create a shape using the starting x & y
                         // and finishing x & y positions
                         Shape aShape = null;
@@ -342,7 +398,9 @@ public class paintingTool extends JFrame {
                         int x = e.getX();
                         int y = e.getY();
 
-                        if (currentAction == 1) {
+                        if (currentAction == 1 || currentAction == 7) {
+                            brushPaths.get(brushPaths.size() - 1).addPoint(e.getPoint());
+                            /*
                             strokeSize = brushVal;
 
                         // Make stroke and fill equal
@@ -354,7 +412,7 @@ public class paintingTool extends JFrame {
                             shapeFill.add(fillColor);
                             shapeStroke.add(strokeColor);
                             transPercent.add(transparentVal);
-                            strokeSizes.add(strokeSize);
+                            strokeSizes.add(strokeSize);*/
                         } else if (currentAction == 8) {
                             strokeSize = 1;
 
@@ -367,7 +425,7 @@ public class paintingTool extends JFrame {
                         }
 
                     // Get the final x & y position after the mouse is dragged
-                    if (currentAction == 1 || currentAction == 8) {
+                    if (currentAction == 1 || currentAction == 8 || currentAction == 7) {
                         drawStart = new Point(e.getX(), e.getY());
                         drawEnd = new Point(e.getX(), e.getY());
                     }
@@ -377,10 +435,11 @@ public class paintingTool extends JFrame {
         }
 
 
-        public void paint(Graphics g) {
+        public void paintComponent(Graphics g) {
 
             // Class used to define the shapes to be drawn and rendered on screen
             graphSettings = (Graphics2D) g;
+            bgColor = graphSettings.getBackground();
 
             // Antialiasing cleans up the jagged lines and defines rendering rules
             graphSettings.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -396,6 +455,9 @@ public class paintingTool extends JFrame {
             // Iterator for transparency
             Iterator<Float> transCounter = transPercent.iterator();
 
+            //paint loaded image if it exists
+            if(srcImg != null)
+                graphSettings.drawImage(srcImg, 0, 0, null);
 
             // cycling through shapes that were created
             for (Shape s : shapes) {
@@ -415,6 +477,17 @@ public class paintingTool extends JFrame {
                 graphSettings.fill(s);
             }
 
+            for(drawPath dp : brushPaths)
+            {
+                graphSettings.setStroke(dp.getStrokeSettings());
+                graphSettings.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
+                graphSettings.setPaint(dp.getColor());
+                for(int i = 0; i < dp.getPath().size()-1; i++)
+                {
+                    graphSettings.drawLine(dp.getPath().get(i).x, dp.getPath().get(i).y, dp.getPath().get(i+1).x, dp.getPath().get(i+1).y);
+                }
+            }
+
             // Guide shape used for drawing
             if (drawStart != null && drawEnd != null) {
 
@@ -427,21 +500,23 @@ public class paintingTool extends JFrame {
 
                 Shape aShape = null;
 
-                if (currentAction == 2 || currentAction == 8 || currentAction == 1) {
+                if (currentAction == 2 || currentAction == 8) {
 
                     aShape = drawLine(drawStart.x, drawStart.y, drawEnd.x, drawEnd.y);
+                    graphSettings.draw(aShape);
 
                 } else if (currentAction == 3) {
 
                     aShape = drawEllipse(drawStart.x, drawStart.y, drawEnd.x, drawEnd.y);
-
+                    graphSettings.draw(aShape);
                 } else if (currentAction == 4) {
 
                     // Create a new rectangle using x & y coordinates
                     aShape = drawRectangle(drawStart.x, drawStart.y, drawEnd.x, drawEnd.y);
+                    graphSettings.draw(aShape);
                 }
 
-                graphSettings.draw(aShape);
+
             }
         }
 
@@ -478,6 +553,36 @@ public class paintingTool extends JFrame {
         private Ellipse2D.Float drawBrush(int x1, int y1, int brushStrokeWidth, int brushStrokeHeight) {
 
             return new Ellipse2D.Float(x1, y1, brushStrokeWidth, brushStrokeHeight);
+        }
+    }
+
+    public class drawPath {
+        private ArrayList<Point> path;
+        private Stroke strokeSettings;
+        private Color color;
+        public drawPath(Point start, Color color, float width, float alpha)
+        {
+            path = new ArrayList<>();
+            path.add(start);
+            this.color = new Color((float)color.getRed()/255, (float)color.getGreen()/255, (float)color.getBlue()/255, alpha);
+            strokeSettings = new BasicStroke(width, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+        }
+
+        public void addPoint(Point p)
+        {
+            path.add(p);
+        }
+        public ArrayList<Point> getPath()
+        {
+            return path;
+        }
+        public Stroke getStrokeSettings()
+        {
+            return strokeSettings;
+        }
+        public Color getColor()
+        {
+            return color;
         }
     }
 
