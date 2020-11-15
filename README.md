@@ -16,6 +16,7 @@ IntelliJ IDEA was used as a primary developmnet tool.
   * Brush
   * Pencil
   * Eraser
+  * Line
   * Oval/Rectangle
   * Color change 
   * Color filled shape and frame
