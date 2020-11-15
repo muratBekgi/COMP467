@@ -27,7 +27,7 @@ IntelliJ IDEA was used as a primary developmnet tool.
   * Open File
   * Save
 
-### Contribution
+### Contributions
 
 ##### Tracy Smart
 ##### Allan Huidobro
