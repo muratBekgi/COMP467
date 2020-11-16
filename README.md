@@ -2,7 +2,7 @@
 
 ### Introduction
 
-This is project implements a painting tool application in Java.
+This project implements a painting tool application in Java.
 
 ### Installation
 
